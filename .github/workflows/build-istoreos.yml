@@ -39,7 +39,7 @@ jobs:
           - x86
         os:
           - ubuntu-22.04
-        include:
+        # include:
          # - REPO_BRANCH: istoreos-24.10
            # ARCHITECTURE: x86-alpha
            # os: ubuntu-22.04
