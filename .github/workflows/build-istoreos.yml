@@ -38,7 +38,7 @@ jobs:
           # - rk35xx
           - x86
         os:
-          - ubuntu-22.04
+          - ubuntu-latest
         # include:
          # - REPO_BRANCH: istoreos-24.10
            # ARCHITECTURE: x86-alpha
@@ -65,6 +65,45 @@ jobs:
         echo "------------------------------- 磁盘详情 -------------------------------\n"
         df -Th
 
+    - name: "Optimize Disk Space"
+      uses: "hugoalh/disk-space-optimizer-ghaction@main"
+      with:
+        operate_sudo: "True"
+        general_include: ".+"
+        general_exclude: |-
+          ^GCC$
+          ^G\+\+$
+          Clang
+          LLVM
+        docker_include: ".+"
+        docker_prune: "True"
+        docker_clean: "True"
+        apt_prune: "True"
+        apt_clean: "True"
+        homebrew_prune: "True"
+        homebrew_clean: "True"
+        npm_prune: "True"
+        npm_clean: "True"
+        os_swap: "True"
+
+    - name: Freeing up disk space
+      uses: easimon/maximize-build-space@master
+      with: 
+        root-reserve-mb: 5120
+        swap-size-mb: 1
+        remove-dotnet: 'true'
+        remove-android: 'true'
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
+
+    - name: Free up disk space complete
+      run: |
+        echo "Free up disk space complete"
+        echo "=============================================================================="
+        df -hT
+        echo "=============================================================================="
+
     - name: 初始化编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -73,10 +112,6 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /etc/mysql /etc/php /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo -E apt-get -qq install $(cat $GITHUB_WORKSPACE/depends/${{ matrix.os }})
-        wget https://bootstrap.pypa.io/pip/3.6/get-pip.py
-        sudo python3 get-pip.py
-        sudo rm -rf get-pip.py
-        sudo pip install pyelftools
         echo "------------------------------- 清理Docker镜像和软件 -------------------------------"
         docker rmi `docker images -q`
         docker image prune -a -f
@@ -89,18 +124,10 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: 克隆源码
-      working-directory: /workdir
+      working-directory: ./
       run: |
         df -hT $PWD
         git clone $REPO_URL -b ${{ matrix.REPO_BRANCH }} openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-
-    - name: 缓存构建动作
-      uses: klever1988/cachewrtbuild@main
-      with:
-        ccache: 'true'
-        mixkey: ${{ matrix.os }}-${{ matrix.ARCHITECTURE }}-${{ matrix.REPO_BRANCH }}
-        prefix: ${{ github.workspace }}/openwrt
 
     - name: 加载自定义 feeds
       env:
@@ -138,6 +165,7 @@ jobs:
       id: package
       run: |
         cd openwrt
+        echo -e 'CONFIG_DEVEL=y\nCONFIG_CCACHE=y' >> .config; make defconfig
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
