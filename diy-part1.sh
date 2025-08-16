@@ -20,3 +20,5 @@
 # echo 'src-git openclash https://github.com/vernesong/OpenClash' >>feeds.conf.default
 # echo 'src-git adguardhome https://github.com/rufengsuixing/luci-app-adguardhome' >>feeds.conf.default
 # echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns' >>feeds.conf.default
+# 添加 QModem 软件源
+echo 'src-git qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
