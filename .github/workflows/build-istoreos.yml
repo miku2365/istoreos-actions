@@ -47,9 +47,6 @@ jobs:
       fail-fast: false
 
     steps:
-    - name: 准备完成
-      uses: actions/checkout@main
-
     - name: 检查服务器配置
       run: |
         echo "若分配的服务器性能不足，务必及时取消，重新运行！"
@@ -122,6 +119,9 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+
+    - name: Checkout
+      uses: actions/checkout@main
 
     - name: 克隆源码
       working-directory: ./
